@@ -14,7 +14,99 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          phone?: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      student_details: {
+        Row: {
+          address: string
+          blood_group: string | null
+          course: string
+          created_at: string
+          department: string
+          emergency_contact: string
+          guardian_name: string
+          guardian_phone: string
+          hostel_name: string
+          id: string
+          roll_number: string
+          room_number: string
+          semester: number
+          updated_at: string
+          user_id: string
+          year_of_study: number
+        }
+        Insert: {
+          address: string
+          blood_group?: string | null
+          course: string
+          created_at?: string
+          department: string
+          emergency_contact: string
+          guardian_name: string
+          guardian_phone: string
+          hostel_name: string
+          id?: string
+          roll_number: string
+          room_number: string
+          semester: number
+          updated_at?: string
+          user_id: string
+          year_of_study: number
+        }
+        Update: {
+          address?: string
+          blood_group?: string | null
+          course?: string
+          created_at?: string
+          department?: string
+          emergency_contact?: string
+          guardian_name?: string
+          guardian_phone?: string
+          hostel_name?: string
+          id?: string
+          roll_number?: string
+          room_number?: string
+          semester?: number
+          updated_at?: string
+          user_id?: string
+          year_of_study?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +115,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_role: "student" | "warden"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +242,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["student", "warden"],
+    },
   },
 } as const
