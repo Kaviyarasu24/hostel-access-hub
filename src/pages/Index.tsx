@@ -1,14 +1,22 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from 'react';
+import { RoleSelection } from '@/components/RoleSelection';
+import { StudentDashboard } from '@/components/StudentDashboard';
+import { WardenDashboard } from '@/components/WardenDashboard';
+
+type UserRole = 'student' | 'warden' | null;
 
 const Index = () => {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
-  );
+  const [userRole, setUserRole] = useState<UserRole>(null);
+
+  if (userRole === 'student') {
+    return <StudentDashboard onBack={() => setUserRole(null)} />;
+  }
+
+  if (userRole === 'warden') {
+    return <WardenDashboard onBack={() => setUserRole(null)} />;
+  }
+
+  return <RoleSelection onRoleSelect={setUserRole} />;
 };
 
 export default Index;
