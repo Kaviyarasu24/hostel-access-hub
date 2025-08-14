@@ -4,9 +4,10 @@ import { Users, Shield } from "lucide-react";
 
 interface RoleSelectionProps {
   onRoleSelect: (role: 'student' | 'warden') => void;
+  onAuthSelect: () => void;
 }
 
-export const RoleSelection = ({ onRoleSelect }: RoleSelectionProps) => {
+export const RoleSelection = ({ onRoleSelect, onAuthSelect }: RoleSelectionProps) => {
   return (
     <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
@@ -51,6 +52,16 @@ export const RoleSelection = ({ onRoleSelect }: RoleSelectionProps) => {
               </Button>
             </CardContent>
           </Card>
+        </div>
+
+        <div className="pt-6 text-center">
+          <Button 
+            variant="outline" 
+            onClick={onAuthSelect}
+            className="text-primary-foreground border-primary-foreground/20 hover:bg-primary-foreground/10"
+          >
+            Sign In / Sign Up
+          </Button>
         </div>
       </div>
     </div>
