@@ -93,7 +93,9 @@ export const Auth = ({ onAuthSuccess, onBack }: AuthProps) => {
         
         if (session?.user) {
           setTimeout(() => {
-            fetchUserProfile(session.user.id);
+            ensureProfileAndDetails(session.user).then(() => {
+              fetchUserProfile(session.user.id);
+            });
           }, 0);
         }
       }
@@ -106,6 +108,81 @@ export const Auth = ({ onAuthSuccess, onBack }: AuthProps) => {
 
     return () => subscription.unsubscribe();
   }, []);
+  
+  const ensureProfileAndDetails = async (currentUser: User) => {
+    try {
+      const md: any = (currentUser as any).user_metadata || {};
+      const { data: existingProfile, error: profileSelectError } = await supabase
+        .from('profiles')
+        .select('id, role')
+        .eq('user_id', currentUser.id)
+        .maybeSingle();
+
+      if (profileSelectError) {
+        console.error('Profile select error:', profileSelectError);
+        return;
+      }
+
+      if (!existingProfile) {
+        const { error: profileInsertError } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: currentUser.id,
+            role: (md.role || 'student'),
+            username: md.username || '',
+            full_name: md.full_name || '',
+            email: currentUser.email || md.email || '',
+            phone: md.phone || null,
+          });
+
+        if (profileInsertError) {
+          console.error('Profile insert error:', profileInsertError);
+          toast({ title: 'Error', description: 'Failed to create profile', variant: 'destructive' });
+          return;
+        }
+      }
+
+      const roleToUse = (existingProfile?.role as string) || (md.role as string) || 'student';
+      if (roleToUse === 'student') {
+        const { data: existingDetails, error: detailsSelectError } = await supabase
+          .from('student_details')
+          .select('id')
+          .eq('user_id', currentUser.id)
+          .maybeSingle();
+
+        if (detailsSelectError) {
+          console.error('Student details select error:', detailsSelectError);
+          return;
+        }
+
+        if (!existingDetails) {
+          const { error: detailsInsertError } = await supabase
+            .from('student_details')
+            .insert({
+              user_id: currentUser.id,
+              roll_number: md.roll_number || '',
+              course: md.course || '',
+              department: md.department || '',
+              year_of_study: md.year_of_study ? parseInt(md.year_of_study) : 1,
+              semester: md.semester ? parseInt(md.semester) : 1,
+              hostel_name: md.hostel_name || '',
+              room_number: md.room_number || '',
+              guardian_name: md.guardian_name || '',
+              guardian_phone: md.guardian_phone || '',
+              emergency_contact: md.emergency_contact || '',
+              blood_group: md.blood_group || '',
+              address: md.address || '',
+            });
+
+          if (detailsInsertError) {
+            console.error('Student details insert error:', detailsInsertError);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('ensureProfileAndDetails error:', e);
+    }
+  };
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -155,46 +232,46 @@ export const Auth = ({ onAuthSuccess, onBack }: AuthProps) => {
     setLoading(true);
 
     try {
-      // First, find the user's email by username
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('username', loginForm.username)
-        .maybeSingle();
+      const identifier = loginForm.username.trim();
+      let emailToUse: string | null = null;
 
-      if (profileError || !profile) {
-        toast({
-          title: "Error",
-          description: "Username not found",
-          variant: "destructive"
-        });
-        setLoading(false);
-        return;
+      if (identifier.includes('@')) {
+        // User entered an email directly
+        emailToUse = identifier;
+      } else {
+        // Try to find email by username
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('username', identifier)
+          .maybeSingle();
+
+        if (!profileError && profile) {
+          emailToUse = profile.email;
+        }
+      }
+
+      if (!emailToUse) {
+        // Fall back to trying the identifier as email
+        emailToUse = identifier;
       }
 
       const { error } = await supabase.auth.signInWithPassword({
-        email: profile.email,
+        email: emailToUse,
         password: loginForm.password
       });
 
       if (error) {
         toast({
-          title: "Login Failed",
+          title: 'Login Failed',
           description: error.message,
-          variant: "destructive"
+          variant: 'destructive'
         });
       } else {
-        toast({
-          title: "Success",
-          description: "Logged in successfully"
-        });
+        toast({ title: 'Success', description: 'Logged in successfully' });
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive"
-      });
+      toast({ title: 'Error', description: 'An unexpected error occurred', variant: 'destructive' });
     }
 
     setLoading(false);
@@ -211,7 +288,26 @@ export const Auth = ({ onAuthSuccess, onBack }: AuthProps) => {
         email: studentForm.email,
         password: studentForm.password,
         options: {
-          emailRedirectTo: redirectUrl
+          emailRedirectTo: redirectUrl,
+          data: {
+            role: 'student',
+            username: studentForm.username,
+            full_name: studentForm.fullName,
+            phone: studentForm.phone,
+            roll_number: studentForm.rollNumber,
+            course: studentForm.course,
+            department: studentForm.department,
+            year_of_study: String(studentForm.yearOfStudy),
+            semester: String(studentForm.semester),
+            hostel_name: studentForm.hostelName,
+            room_number: studentForm.roomNumber,
+            guardian_name: studentForm.guardianName,
+            guardian_phone: studentForm.guardianPhone,
+            emergency_contact: studentForm.emergencyContact,
+            blood_group: studentForm.bloodGroup,
+            address: studentForm.address,
+            email: studentForm.email,
+          }
         }
       });
 
@@ -226,60 +322,9 @@ export const Auth = ({ onAuthSuccess, onBack }: AuthProps) => {
       }
 
       if (data.user) {
-        // Create profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: data.user.id,
-            role: 'student',
-            username: studentForm.username,
-            full_name: studentForm.fullName,
-            email: studentForm.email,
-            phone: studentForm.phone
-          });
-
-        if (profileError) {
-          toast({
-            title: "Error",
-            description: "Failed to create profile",
-            variant: "destructive"
-          });
-          setLoading(false);
-          return;
-        }
-
-        // Create student details
-        const { error: detailsError } = await supabase
-          .from('student_details')
-          .insert({
-            user_id: data.user.id,
-            roll_number: studentForm.rollNumber,
-            course: studentForm.course,
-            department: studentForm.department,
-            year_of_study: studentForm.yearOfStudy,
-            semester: studentForm.semester,
-            hostel_name: studentForm.hostelName,
-            room_number: studentForm.roomNumber,
-            guardian_name: studentForm.guardianName,
-            guardian_phone: studentForm.guardianPhone,
-            emergency_contact: studentForm.emergencyContact,
-            blood_group: studentForm.bloodGroup,
-            address: studentForm.address
-          });
-
-        if (detailsError) {
-          toast({
-            title: "Error",
-            description: "Failed to save student details",
-            variant: "destructive"
-          });
-          setLoading(false);
-          return;
-        }
-
         toast({
           title: "Success",
-          description: "Student account created successfully. Please check your email to verify your account."
+          description: "Account created. Please check your email to verify, then log in."
         });
         setActiveTab('login');
       }
@@ -305,7 +350,14 @@ export const Auth = ({ onAuthSuccess, onBack }: AuthProps) => {
         email: wardenForm.email,
         password: wardenForm.password,
         options: {
-          emailRedirectTo: redirectUrl
+          emailRedirectTo: redirectUrl,
+          data: {
+            role: 'warden',
+            username: wardenForm.username,
+            full_name: wardenForm.fullName,
+            phone: wardenForm.phone,
+            email: wardenForm.email,
+          }
         }
       });
 
@@ -320,30 +372,9 @@ export const Auth = ({ onAuthSuccess, onBack }: AuthProps) => {
       }
 
       if (data.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: data.user.id,
-            role: 'warden',
-            username: wardenForm.username,
-            full_name: wardenForm.fullName,
-            email: wardenForm.email,
-            phone: wardenForm.phone
-          });
-
-        if (profileError) {
-          toast({
-            title: "Error",
-            description: "Failed to create profile",
-            variant: "destructive"
-          });
-          setLoading(false);
-          return;
-        }
-
         toast({
           title: "Success",
-          description: "Warden account created successfully. Please check your email to verify your account."
+          description: "Account created. Please check your email to verify, then log in."
         });
         setActiveTab('login');
       }
