@@ -109,19 +109,41 @@ export const Auth = ({ onAuthSuccess, onBack }: AuthProps) => {
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('user_id', userId)
-        .maybeSingle();
+      // Add retry logic with exponential backoff for profile creation timing
+      let retries = 3;
+      let profile = null;
+      
+      while (retries > 0 && !profile) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('user_id', userId)
+          .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching profile:', error);
-        return;
+        if (error) {
+          console.error('Error fetching profile:', error);
+          return;
+        }
+
+        if (data) {
+          profile = data;
+          break;
+        }
+
+        // Wait before retrying (100ms, 200ms, 400ms)
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, 3 - retries) * 100));
+        retries--;
       }
 
       if (profile) {
         onAuthSuccess(user!, profile.role);
+      } else {
+        console.error('Profile not found after retries');
+        toast({
+          title: "Error",
+          description: "Profile not found. Please try logging in again.",
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
