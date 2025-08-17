@@ -13,7 +13,7 @@ import { ArrowLeft, UserCheck, Shield } from 'lucide-react';
 
 interface AuthProps {
   onAuthSuccess: (user: User, role: string) => void;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 interface StudentFormData {
@@ -392,14 +392,16 @@ export const Auth = ({ onAuthSuccess, onBack }: AuthProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-4">
       <div className="w-full max-w-4xl">
-        <Button
-          variant="outline"
-          onClick={onBack}
-          className="mb-6"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Role Selection
-        </Button>
+        {onBack && (
+          <Button
+            variant="outline"
+            onClick={onBack}
+            className="mb-6"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+        )}
 
         <Card>
           <CardHeader className="text-center">
