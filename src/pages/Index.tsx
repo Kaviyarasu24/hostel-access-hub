@@ -1,19 +1,16 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
-import { RoleSelection } from '@/components/RoleSelection';
 import { StudentDashboard } from '@/components/StudentDashboard';
 import { WardenDashboard } from '@/components/WardenDashboard';
 import { Auth } from '@/pages/Auth';
 
 type UserRole = 'student' | 'warden' | null;
-type ViewState = 'role-selection' | 'auth' | 'dashboard';
 
 const Index = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<UserRole>(null);
-  const [viewState, setViewState] = useState<ViewState>('role-selection');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -61,7 +58,6 @@ const Index = () => {
 
       if (profile) {
         setUserRole(profile.role);
-        setViewState('dashboard');
       }
       setLoading(false);
     } catch (error) {
@@ -73,47 +69,33 @@ const Index = () => {
   const handleAuthSuccess = (user: User, role: string) => {
     setUser(user);
     setUserRole(role as UserRole);
-    setViewState('dashboard');
   };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUser(null);
     setUserRole(null);
-    setViewState('role-selection');
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-hero flex items-center justify-center">
-        <div className="text-primary-foreground text-lg">Loading...</div>
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
+        <div className="text-primary text-lg">Loading...</div>
       </div>
     );
   }
 
-  if (viewState === 'auth') {
-    return (
-      <Auth 
-        onAuthSuccess={handleAuthSuccess}
-        onBack={() => setViewState('role-selection')}
-      />
-    );
-  }
-
-  if (viewState === 'dashboard' && userRole === 'student') {
+  // Show dashboards if user is authenticated and has a role
+  if (user && userRole === 'student') {
     return <StudentDashboard onBack={handleLogout} />;
   }
 
-  if (viewState === 'dashboard' && userRole === 'warden') {
+  if (user && userRole === 'warden') {
     return <WardenDashboard onBack={handleLogout} />;
   }
 
-  return (
-    <RoleSelection 
-      onRoleSelect={setUserRole} 
-      onAuthSelect={() => setViewState('auth')}
-    />
-  );
+  // Show auth page as landing page
+  return <Auth onAuthSuccess={handleAuthSuccess} />;
 };
 
 export default Index;

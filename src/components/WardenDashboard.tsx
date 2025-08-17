@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -9,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Clock, User, Calendar, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface WardenDashboardProps {
   onBack: () => void;
@@ -16,15 +16,22 @@ interface WardenDashboardProps {
 
 interface GatepassRequest {
   id: string;
-  name: string;
-  rollNumber: string;
-  roomNumber: string;
+  user_id: string;
+  from_date_time: string;
+  to_date_time: string;
+  place: string;
+  contact_number: string;
   reason: string;
-  exitDateTime: string;
-  returnDateTime: string;
   status: "pending" | "approved" | "rejected";
-  remarks?: string;
-  submittedAt: string;
+  warden_remarks?: string;
+  created_at: string;
+  profiles?: {
+    full_name: string;
+  };
+  student_details?: {
+    roll_number: string;
+    room_number: string;
+  };
 }
 
 export const WardenDashboard = ({ onBack }: WardenDashboardProps) => {
@@ -33,79 +40,101 @@ export const WardenDashboard = ({ onBack }: WardenDashboardProps) => {
   const [reviewDialog, setReviewDialog] = useState(false);
   const [remarks, setRemarks] = useState("");
   const [activeTab, setActiveTab] = useState("pending");
+  const [loading, setLoading] = useState(true);
+  const [requests, setRequests] = useState<GatepassRequest[]>([]);
+  const [totalStudents, setTotalStudents] = useState(0);
 
-  // Mock data - in real app this would come from database
-  const [requests, setRequests] = useState<GatepassRequest[]>([
-    {
-      id: "1",
-      name: "John Doe",
-      rollNumber: "CS21B001",
-      roomNumber: "A-101",
-      reason: "Medical appointment with family doctor for regular checkup",
-      exitDateTime: "2024-01-15T10:00",
-      returnDateTime: "2024-01-15T18:00",
-      status: "pending",
-      submittedAt: "2024-01-14T15:30",
-    },
-    {
-      id: "2",
-      name: "Jane Smith",
-      rollNumber: "CS21B002",
-      roomNumber: "B-205",
-      reason: "Family function - cousin's wedding",
-      exitDateTime: "2024-01-20T16:00",
-      returnDateTime: "2024-01-21T09:00",
-      status: "pending",
-      submittedAt: "2024-01-18T10:15",
-    },
-    {
-      id: "3",
-      name: "Mike Johnson",
-      rollNumber: "CS21B003",
-      roomNumber: "C-301",
-      reason: "Job interview at tech company",
-      exitDateTime: "2024-01-12T09:00",
-      returnDateTime: "2024-01-12T17:00",
-      status: "approved",
-      remarks: "Approved for career development opportunity",
-      submittedAt: "2024-01-10T14:20",
-    },
-    {
-      id: "4",
-      name: "Sarah Wilson",
-      rollNumber: "CS21B004",
-      roomNumber: "A-150",
-      reason: "Personal work",
-      exitDateTime: "2024-01-08T11:00",
-      returnDateTime: "2024-01-08T15:00",
-      status: "rejected",
-      remarks: "Insufficient reason provided. Please specify the nature of personal work.",
-      submittedAt: "2024-01-07T16:45",
-    },
-  ]);
+  useEffect(() => {
+    fetchRequests();
+    fetchTotalStudents();
+  }, []);
+
+  const fetchTotalStudents = async () => {
+    try {
+      const { count, error } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'student');
+
+      if (error) {
+        console.error('Error fetching student count:', error);
+        return;
+      }
+
+      setTotalStudents(count || 0);
+    } catch (error) {
+      console.error('Error in fetchTotalStudents:', error);
+    }
+  };
+
+  const fetchRequests = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('gatepass_requests')
+        .select(`
+          *,
+          profiles!inner(full_name),
+          student_details!inner(roll_number, room_number)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching requests:', error);
+        return;
+      }
+
+      setRequests((data as any) || []);
+    } catch (error) {
+      console.error('Error in fetchRequests:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleReview = (request: GatepassRequest, action: "approve" | "reject") => {
     setSelectedRequest(request);
     setReviewDialog(true);
   };
 
-  const handleSubmitReview = (action: "approve" | "reject") => {
+  const handleSubmitReview = async (action: "approve" | "reject") => {
     if (!selectedRequest) return;
 
-    setRequests(prev => prev.map(req => 
-      req.id === selectedRequest.id 
-        ? { ...req, status: action === "approve" ? "approved" : "rejected", remarks }
-        : req
-    ));
+    try {
+      const { error } = await supabase
+        .from('gatepass_requests')
+        .update({
+          status: action === "approve" ? "approved" : "rejected",
+          warden_remarks: remarks || null,
+        })
+        .eq('id', selectedRequest.id);
 
-    toast({
-      title: `Request ${action === "approve" ? "Approved" : "Rejected"}`,
-      description: `Gatepass request for ${selectedRequest.name} has been ${action === "approve" ? "approved" : "rejected"}.`,
-    });
+      if (error) {
+        console.error('Error updating request:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update request. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    setReviewDialog(false);
-    setSelectedRequest(null);
-    setRemarks("");
+      toast({
+        title: `Request ${action === "approve" ? "Approved" : "Rejected"}`,
+        description: `Gatepass request has been ${action === "approve" ? "approved" : "rejected"}.`,
+      });
+
+      setReviewDialog(false);
+      setSelectedRequest(null);
+      setRemarks("");
+      fetchRequests();
+    } catch (error) {
+      console.error('Error in handleSubmitReview:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    }
   };
 
   const filteredRequests = requests.filter(req => {
@@ -123,6 +152,14 @@ export const WardenDashboard = ({ onBack }: WardenDashboardProps) => {
 
   const counts = getRequestCounts();
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-primary text-lg">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="bg-gradient-primary text-primary-foreground p-6">
@@ -130,11 +167,11 @@ export const WardenDashboard = ({ onBack }: WardenDashboardProps) => {
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="sm" onClick={onBack} className="text-primary-foreground hover:bg-primary-foreground/20">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
+              Logout
             </Button>
             <div>
               <h1 className="text-2xl font-bold">Warden Dashboard</h1>
-              <p className="opacity-90">Review and manage gatepass requests</p>
+              <p className="opacity-90">Total Students: {totalStudents}</p>
             </div>
           </div>
         </div>
@@ -228,12 +265,13 @@ export const WardenDashboard = ({ onBack }: WardenDashboardProps) => {
                           <div className="flex items-start justify-between mb-4">
                             <div>
                               <div className="flex items-center space-x-3 mb-2">
-                                <h3 className="font-semibold text-lg">{request.name}</h3>
+                                <h3 className="font-semibold text-lg">{request.profiles?.full_name}</h3>
                                 <StatusBadge status={request.status} />
                               </div>
                               <div className="text-sm text-muted-foreground space-y-1">
-                                <p>Roll: {request.rollNumber} | Room: {request.roomNumber}</p>
-                                <p>Submitted: {new Date(request.submittedAt).toLocaleString()}</p>
+                                <p>Roll: {request.student_details?.roll_number} | Room: {request.student_details?.room_number}</p>
+                                <p>Submitted: {new Date(request.created_at).toLocaleString()}</p>
+                                <p>Place: {request.place} | Contact: {request.contact_number}</p>
                               </div>
                             </div>
                             {request.status === "pending" && (
@@ -262,17 +300,17 @@ export const WardenDashboard = ({ onBack }: WardenDashboardProps) => {
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                             <div>
-                              <span className="font-medium">Exit:</span> {new Date(request.exitDateTime).toLocaleString()}
+                              <span className="font-medium">From:</span> {new Date(request.from_date_time).toLocaleString()}
                             </div>
                             <div>
-                              <span className="font-medium">Return:</span> {new Date(request.returnDateTime).toLocaleString()}
+                              <span className="font-medium">To:</span> {new Date(request.to_date_time).toLocaleString()}
                             </div>
                           </div>
                           
-                          {request.remarks && (
+                          {request.warden_remarks && (
                             <div className="mt-3 p-3 bg-secondary rounded-lg">
                               <p className="text-sm">
-                                <span className="font-medium">Remarks:</span> {request.remarks}
+                                <span className="font-medium">Remarks:</span> {request.warden_remarks}
                               </p>
                             </div>
                           )}
@@ -293,17 +331,20 @@ export const WardenDashboard = ({ onBack }: WardenDashboardProps) => {
           <DialogHeader>
             <DialogTitle>Review Gatepass Request</DialogTitle>
             <DialogDescription>
-              {selectedRequest && `Review request from ${selectedRequest.name} (${selectedRequest.rollNumber})`}
+              {selectedRequest && `Review request from ${selectedRequest.profiles?.full_name} (${selectedRequest.student_details?.roll_number})`}
             </DialogDescription>
           </DialogHeader>
           
           {selectedRequest && (
             <div className="space-y-4">
               <div className="bg-muted rounded-lg p-3">
+                <p className="text-sm"><span className="font-medium">Student:</span> {selectedRequest.profiles?.full_name}</p>
+                <p className="text-sm"><span className="font-medium">Place:</span> {selectedRequest.place}</p>
+                <p className="text-sm"><span className="font-medium">Contact:</span> {selectedRequest.contact_number}</p>
                 <p className="text-sm"><span className="font-medium">Reason:</span> {selectedRequest.reason}</p>
                 <p className="text-sm mt-2">
-                  <span className="font-medium">Duration:</span> {new Date(selectedRequest.exitDateTime).toLocaleString()} 
-                  to {new Date(selectedRequest.returnDateTime).toLocaleString()}
+                  <span className="font-medium">Duration:</span> {new Date(selectedRequest.from_date_time).toLocaleString()} 
+                  to {new Date(selectedRequest.to_date_time).toLocaleString()}
                 </p>
               </div>
               
