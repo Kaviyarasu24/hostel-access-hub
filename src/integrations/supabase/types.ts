@@ -14,48 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      gatepass_requests: {
-        Row: {
-          contact_number: string
-          created_at: string
-          from_date_time: string
-          id: string
-          place: string
-          reason: string
-          status: string
-          to_date_time: string
-          updated_at: string
-          user_id: string
-          warden_remarks: string | null
-        }
-        Insert: {
-          contact_number: string
-          created_at?: string
-          from_date_time: string
-          id?: string
-          place: string
-          reason: string
-          status?: string
-          to_date_time: string
-          updated_at?: string
-          user_id: string
-          warden_remarks?: string | null
-        }
-        Update: {
-          contact_number?: string
-          created_at?: string
-          from_date_time?: string
-          id?: string
-          place?: string
-          reason?: string
-          status?: string
-          to_date_time?: string
-          updated_at?: string
-          user_id?: string
-          warden_remarks?: string | null
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           created_at: string
