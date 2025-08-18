@@ -71,11 +71,7 @@ export const WardenDashboard = ({ onBack }: WardenDashboardProps) => {
     try {
       const { data, error } = await supabase
         .from('gatepass_requests')
-        .select(`
-          *,
-          profiles!inner(full_name),
-          student_details!inner(roll_number, room_number)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -83,7 +79,32 @@ export const WardenDashboard = ({ onBack }: WardenDashboardProps) => {
         return;
       }
 
-      setRequests((data as any) || []);
+      // Fetch profile and student details separately and combine
+      const requestsWithDetails = await Promise.all(
+        (data || []).map(async (request) => {
+          const [profileResult, studentResult] = await Promise.all([
+            supabase
+              .from('profiles')
+              .select('full_name')
+              .eq('user_id', request.user_id)
+              .maybeSingle(),
+            supabase
+              .from('student_details')
+              .select('roll_number, room_number')
+              .eq('user_id', request.user_id)
+              .maybeSingle()
+          ]);
+
+          return {
+            ...request,
+            status: request.status as "pending" | "approved" | "rejected",
+            profiles: profileResult.data || undefined,
+            student_details: studentResult.data || undefined
+          } as GatepassRequest;
+        })
+      );
+
+      setRequests(requestsWithDetails);
     } catch (error) {
       console.error('Error in fetchRequests:', error);
     } finally {
