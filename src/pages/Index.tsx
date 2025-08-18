@@ -71,18 +71,17 @@ const Index = () => {
     }
   };
 
-  const handleAuthSuccess = (user: User, role: string) => {
+  const handleAuthSuccess = async (user: User, role: string) => {
     setUser(user);
     setUserRole(role as UserRole);
+    
+    // Navigate based on role
+    if (role === 'student') {
+      window.location.href = '/student-dashboard';
+    } else if (role === 'warden') {
+      window.location.href = '/warden-dashboard';
+    }
   };
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setUserRole(null);
-  };
-
-  console.log('Current state:', { user: !!user, userRole, loading });
 
   if (loading) {
     return (
@@ -92,19 +91,18 @@ const Index = () => {
     );
   }
 
-  // Show dashboards if user is authenticated and has a role
-  if (user && userRole === 'student') {
-    console.log('Rendering StudentDashboard');
-    return <StudentDashboard onBack={handleLogout} />;
+  // If user is already logged in, redirect them
+  if (user && userRole) {
+    if (userRole === 'student') {
+      window.location.href = '/student-dashboard';
+      return null;
+    } else if (userRole === 'warden') {
+      window.location.href = '/warden-dashboard';
+      return null;
+    }
   }
 
-  if (user && userRole === 'warden') {
-    console.log('Rendering WardenDashboard');
-    return <WardenDashboard onBack={handleLogout} />;
-  }
-
-  console.log('Rendering Auth page');
-  // Show auth page as landing page
+  // Show auth page as landing page if not logged in
   return <Auth onAuthSuccess={handleAuthSuccess} />;
 };
 

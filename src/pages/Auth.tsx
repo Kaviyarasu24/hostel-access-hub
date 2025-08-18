@@ -256,7 +256,7 @@ export const Auth = ({ onAuthSuccess, onBack }: AuthProps) => {
         emailToUse = identifier;
       }
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: emailToUse,
         password: loginForm.password
       });
@@ -268,7 +268,30 @@ export const Auth = ({ onAuthSuccess, onBack }: AuthProps) => {
           variant: 'destructive'
         });
       } else {
-        toast({ title: 'Success', description: 'Logged in successfully' });
+        // Get the user's profile to determine their role
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('user_id', authData.user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          toast({
+            title: 'Error',
+            description: 'Could not fetch user profile',
+            variant: 'destructive'
+          });
+        } else if (profile) {
+          toast({ title: 'Success', description: 'Logged in successfully' });
+          // Call the callback with user and role
+          onAuthSuccess(authData.user, profile.role);
+        } else {
+          toast({
+            title: 'Error',
+            description: 'User profile not found',
+            variant: 'destructive'
+          });
+        }
       }
     } catch (error) {
       toast({ title: 'Error', description: 'An unexpected error occurred', variant: 'destructive' });
