@@ -44,6 +44,7 @@ const Index = () => {
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log('Fetching profile for user:', userId);
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('role')
@@ -56,8 +57,12 @@ const Index = () => {
         return;
       }
 
+      console.log('Profile data:', profile);
       if (profile) {
+        console.log('Setting user role to:', profile.role);
         setUserRole(profile.role);
+      } else {
+        console.log('No profile found for user');
       }
       setLoading(false);
     } catch (error) {
@@ -77,6 +82,8 @@ const Index = () => {
     setUserRole(null);
   };
 
+  console.log('Current state:', { user: !!user, userRole, loading });
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
@@ -87,13 +94,16 @@ const Index = () => {
 
   // Show dashboards if user is authenticated and has a role
   if (user && userRole === 'student') {
+    console.log('Rendering StudentDashboard');
     return <StudentDashboard onBack={handleLogout} />;
   }
 
   if (user && userRole === 'warden') {
+    console.log('Rendering WardenDashboard');
     return <WardenDashboard onBack={handleLogout} />;
   }
 
+  console.log('Rendering Auth page');
   // Show auth page as landing page
   return <Auth onAuthSuccess={handleAuthSuccess} />;
 };
