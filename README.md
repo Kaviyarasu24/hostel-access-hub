@@ -1,73 +1,184 @@
-# Welcome to your Lovable project
+# Hostel Access Hub
 
-## Project info
+A modern web application for managing hostel gatepass requests with separate dashboards for students and wardens.
 
-**URL**: https://lovable.dev/projects/d3d38e13-68d2-4119-a91c-9d3e9b88d49a
+> **⚠️ Note**: This project is not yet completed.
 
-## How can I edit this code?
+## 📋 Overview
 
-There are several ways of editing your application.
+Hostel Access Hub is a comprehensive gatepass management system designed to streamline the process of requesting and approving student leave from hostel premises. The application provides role-based access with dedicated interfaces for students and wardens.
 
-**Use Lovable**
+## ✨ Features
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/d3d38e13-68d2-4119-a91c-9d3e9b88d49a) and start prompting.
+### Student Features
+- **Submit Gatepass Requests**: Request permission to leave hostel with details like destination, dates, contact info, and reason
+- **Track Request Status**: View all submitted requests with real-time status updates (pending, approved, rejected)
+- **Request History**: Access complete history of all gatepass requests
+- **Profile Information**: View personal details including roll number and room number
+- **Warden Feedback**: See remarks and comments from wardens on requests
 
-Changes made via Lovable will be committed automatically to this repo.
+### Warden Features
+- **Request Management**: Review all gatepass requests from students
+- **Approve/Reject Requests**: Take action on pending requests with optional remarks
+- **Categorized Views**: Filter requests by status (pending, approved, rejected)
+- **Student Information**: Access student details (name, roll number, room number) with each request
+- **Dashboard Analytics**: View total student count and request statistics
+- **Real-time Updates**: Automatic notification system for new requests
 
-**Use your preferred IDE**
+## 🛠️ Tech Stack
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **Frontend**:
+  - React 18 with TypeScript
+  - Vite for blazing-fast development
+  - Tailwind CSS for styling
+  - shadcn/ui for UI components
+  - Radix UI primitives
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- **Backend & Database**:
+  - Supabase for backend services
+  - PostgreSQL database
+  - Row Level Security (RLS) policies
+  - Real-time subscriptions
 
-Follow these steps:
+- **Additional Libraries**:
+  - React Query (@tanstack/react-query) for server state management
+  - React Hook Form for form handling
+  - date-fns for date manipulation
+  - Lucide React for icons
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 🚀 Getting Started
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### Prerequisites
 
-# Step 3: Install the necessary dependencies.
-npm i
+- Node.js (v18 or higher) - [Install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- npm or yarn package manager
+- Supabase account
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+### Installation
+
+1. **Clone the repository**
+   ```sh
+   git clone <YOUR_GIT_URL>
+   cd hostel-access-hub
+   ```
+
+2. **Install dependencies**
+   ```sh
+   npm install
+   # or
+   yarn install
+   # or
+   bun install
+   ```
+
+3. **Set up Supabase**
+   - Create a new project on [Supabase](https://supabase.com)
+   - Copy your project URL and anon key
+   - Create a `.env.local` file in the root directory:
+     ```
+     VITE_SUPABASE_URL=your_supabase_url
+     VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+     ```
+
+4. **Run database migrations**
+   ```sh
+   # Install Supabase CLI
+   npm install -g supabase
+
+   # Link to your project
+   supabase link --project-ref your-project-ref
+
+   # Push migrations
+   supabase db push
+   ```
+
+5. **Start the development server**
+   ```sh
+   npm run dev
+   ```
+
+   The application will be available at `http://localhost:5173`
+
+## 📁 Project Structure
+
+```
+hostel-access-hub/
+├── src/
+│   ├── components/
+│   │   ├── StudentDashboard.tsx    # Student interface
+│   │   ├── WardenDashboard.tsx     # Warden interface
+│   │   └── ui/                     # Reusable UI components
+│   ├── pages/
+│   │   ├── Auth.tsx                # Authentication page
+│   │   ├── Index.tsx               # Landing page
+│   │   └── NotFound.tsx            # 404 page
+│   ├── integrations/
+│   │   └── supabase/
+│   │       ├── client.ts           # Supabase client config
+│   │       └── types.ts            # Database types
+│   ├── hooks/                      # Custom React hooks
+│   ├── lib/                        # Utility functions
+│   └── main.tsx                    # App entry point
+├── supabase/
+│   └── migrations/                 # Database migrations
+└── public/                         # Static assets
 ```
 
-**Edit a file directly in GitHub**
+## 🗄️ Database Schema
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+The application uses the following main tables:
 
-**Use GitHub Codespaces**
+- **profiles**: User profiles with role-based access (student/warden)
+- **student_details**: Student-specific information (roll number, room number)
+- **gatepass_requests**: All gatepass request records with status tracking
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🔐 Authentication & Authorization
 
-## What technologies are used for this project?
+- Authentication handled by Supabase Auth
+- Role-based access control (RBAC)
+- Row Level Security (RLS) policies ensure data privacy
+- Students can only view/edit their own requests
+- Wardens have access to all requests
 
-This project is built with:
+## 🎨 UI Components
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Built with shadcn/ui, the application includes:
+- Cards, Dialogs, and Modals
+- Forms with validation
+- Tables and Lists
+- Status badges
+- Toast notifications
+- Responsive design for mobile and desktop
 
-## How can I deploy this project?
+## 📱 Usage
 
-Simply open [Lovable](https://lovable.dev/projects/d3d38e13-68d2-4119-a91c-9d3e9b88d49a) and click on Share -> Publish.
+### For Students
+1. Sign up/Login with your credentials
+2. Navigate to Student Dashboard
+3. Click "New Request" to submit a gatepass
+4. Fill in the required details and submit
+5. Track your request status in the dashboard
 
-## Can I connect a custom domain to my Lovable project?
+### For Wardens
+1. Login with warden credentials
+2. Navigate to Warden Dashboard
+3. Review pending requests in the "Pending" tab
+4. Click on a request to view details
+5. Approve or reject with optional remarks
+6. View approved/rejected requests in respective tabs
 
-Yes, you can!
+## 🔧 Development
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+```sh
+# Run development server
+npm run dev
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+
+# Lint code
+npm run lint
+```
