@@ -413,324 +413,387 @@ export const Auth = ({ onAuthSuccess, onBack }: AuthProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
       <div className="w-full max-w-4xl">
         {onBack && (
           <Button
-            variant="outline"
+            variant="ghost"
             onClick={onBack}
-            className="mb-6"
+            className="mb-6 text-gray-600 hover:text-gray-900"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
         )}
 
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">Hostel GatePass Manager</CardTitle>
-            <CardDescription>Sign in to your account or create a new one</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              </TabsList>
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="text-center space-y-2">
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              Hostel Access Hub
+            </h1>
+            <p className="text-gray-600 text-lg">Manage gatepass requests seamlessly</p>
+          </div>
 
-              <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="username">Username</Label>
-                    <Input
-                      id="username"
-                      type="text"
-                      value={loginForm.username}
-                      onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
-                      required
-                    />
+          {/* Main Card */}
+          <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur">
+            <CardContent className="p-8">
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid w-full grid-cols-2 bg-gray-100">
+                  <TabsTrigger value="login" className="text-base">Sign In</TabsTrigger>
+                  <TabsTrigger value="signup" className="text-base">Create Account</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="login" className="mt-6">
+                  <form onSubmit={handleLogin} className="space-y-5">
+                    <div className="space-y-2">
+                      <Label htmlFor="username" className="text-gray-700 font-semibold">Username or Email</Label>
+                      <Input
+                        id="username"
+                        type="text"
+                        placeholder="Enter your username or email"
+                        value={loginForm.username}
+                        onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
+                        className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password" className="text-gray-700 font-semibold">Password</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="Enter your password"
+                        value={loginForm.password}
+                        onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                        className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+                    <Button 
+                      type="submit" 
+                      className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-base"
+                      disabled={loading}
+                    >
+                      {loading ? 'Signing in...' : 'Sign In'}
+                    </Button>
+                  </form>
+                </TabsContent>
+
+                <TabsContent value="signup" className="mt-6">
+                  <div className="space-y-6">
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <Label className="text-gray-700 font-semibold block mb-3">Account Type</Label>
+                      <Tabs value={userRole} onValueChange={(value) => setUserRole(value as 'student' | 'warden')}>
+                        <TabsList className="grid w-full grid-cols-2 bg-white border border-gray-200">
+                          <TabsTrigger value="student" className="flex items-center gap-2 text-base">
+                            <UserCheck className="w-5 h-5" />
+                            Student
+                          </TabsTrigger>
+                          <TabsTrigger value="warden" className="flex items-center gap-2 text-base">
+                            <Shield className="w-5 h-5" />
+                            Warden
+                          </TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="student" className="mt-4">
+                          <form onSubmit={handleStudentSignup} className="space-y-5">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                              <div className="space-y-2">
+                                <Label htmlFor="student-username" className="text-gray-700 font-semibold">Username *</Label>
+                                <Input
+                                  id="student-username"
+                                  placeholder="Choose a username"
+                                  value={studentForm.username}
+                                  onChange={(e) => setStudentForm({ ...studentForm, username: e.target.value })}
+                                  className="h-11"
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="student-fullname" className="text-gray-700 font-semibold">Full Name *</Label>
+                                <Input
+                                  id="student-fullname"
+                                  placeholder="Your full name"
+                                  value={studentForm.fullName}
+                                  onChange={(e) => setStudentForm({ ...studentForm, fullName: e.target.value })}
+                                  className="h-11"
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="student-email" className="text-gray-700 font-semibold">Email *</Label>
+                                <Input
+                                  id="student-email"
+                                  type="email"
+                                  placeholder="your.email@college.edu"
+                                  value={studentForm.email}
+                                  onChange={(e) => setStudentForm({ ...studentForm, email: e.target.value })}
+                                  className="h-11"
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="student-password" className="text-gray-700 font-semibold">Password *</Label>
+                                <Input
+                                  id="student-password"
+                                  type="password"
+                                  placeholder="Create a strong password"
+                                  value={studentForm.password}
+                                  onChange={(e) => setStudentForm({ ...studentForm, password: e.target.value })}
+                                  className="h-11"
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="student-phone" className="text-gray-700 font-semibold">Phone</Label>
+                                <Input
+                                  id="student-phone"
+                                  placeholder="Your phone number"
+                                  value={studentForm.phone}
+                                  onChange={(e) => setStudentForm({ ...studentForm, phone: e.target.value })}
+                                  className="h-11"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="student-roll" className="text-gray-700 font-semibold">Roll Number *</Label>
+                                <Input
+                                  id="student-roll"
+                                  placeholder="e.g., CSE2024001"
+                                  value={studentForm.rollNumber}
+                                  onChange={(e) => setStudentForm({ ...studentForm, rollNumber: e.target.value })}
+                                  className="h-11"
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="student-course" className="text-gray-700 font-semibold">Course *</Label>
+                                <Input
+                                  id="student-course"
+                                  placeholder="e.g., B.Tech"
+                                  value={studentForm.course}
+                                  onChange={(e) => setStudentForm({ ...studentForm, course: e.target.value })}
+                                  className="h-11"
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="student-department" className="text-gray-700 font-semibold">Department *</Label>
+                                <Input
+                                  id="student-department"
+                                  placeholder="e.g., Computer Science"
+                                  value={studentForm.department}
+                                  onChange={(e) => setStudentForm({ ...studentForm, department: e.target.value })}
+                                  className="h-11"
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="student-year" className="text-gray-700 font-semibold">Year of Study *</Label>
+                                <Select
+                                  value={studentForm.yearOfStudy.toString()}
+                                  onValueChange={(value) => setStudentForm({ ...studentForm, yearOfStudy: parseInt(value) })}
+                                >
+                                  <SelectTrigger className="h-11">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="1">1st Year</SelectItem>
+                                    <SelectItem value="2">2nd Year</SelectItem>
+                                    <SelectItem value="3">3rd Year</SelectItem>
+                                    <SelectItem value="4">4th Year</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="student-semester" className="text-gray-700 font-semibold">Semester *</Label>
+                                <Select
+                                  value={studentForm.semester.toString()}
+                                  onValueChange={(value) => setStudentForm({ ...studentForm, semester: parseInt(value) })}
+                                >
+                                  <SelectTrigger className="h-11">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
+                                      <SelectItem key={sem} value={sem.toString()}>{sem}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="student-hostel" className="text-gray-700 font-semibold">Hostel Name *</Label>
+                                <Input
+                                  id="student-hostel"
+                                  placeholder="e.g., Hostel A"
+                                  value={studentForm.hostelName}
+                                  onChange={(e) => setStudentForm({ ...studentForm, hostelName: e.target.value })}
+                                  className="h-11"
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="student-room" className="text-gray-700 font-semibold">Room Number *</Label>
+                                <Input
+                                  id="student-room"
+                                  placeholder="e.g., 201"
+                                  value={studentForm.roomNumber}
+                                  onChange={(e) => setStudentForm({ ...studentForm, roomNumber: e.target.value })}
+                                  className="h-11"
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="student-guardian" className="text-gray-700 font-semibold">Guardian Name *</Label>
+                                <Input
+                                  id="student-guardian"
+                                  placeholder="Parent/Guardian name"
+                                  value={studentForm.guardianName}
+                                  onChange={(e) => setStudentForm({ ...studentForm, guardianName: e.target.value })}
+                                  className="h-11"
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="student-guardian-phone" className="text-gray-700 font-semibold">Guardian Phone *</Label>
+                                <Input
+                                  id="student-guardian-phone"
+                                  placeholder="Guardian's phone number"
+                                  value={studentForm.guardianPhone}
+                                  onChange={(e) => setStudentForm({ ...studentForm, guardianPhone: e.target.value })}
+                                  className="h-11"
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="student-emergency" className="text-gray-700 font-semibold">Emergency Contact *</Label>
+                                <Input
+                                  id="student-emergency"
+                                  placeholder="Emergency contact number"
+                                  value={studentForm.emergencyContact}
+                                  onChange={(e) => setStudentForm({ ...studentForm, emergencyContact: e.target.value })}
+                                  className="h-11"
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="student-blood" className="text-gray-700 font-semibold">Blood Group</Label>
+                                <Select
+                                  value={studentForm.bloodGroup}
+                                  onValueChange={(value) => setStudentForm({ ...studentForm, bloodGroup: value })}
+                                >
+                                  <SelectTrigger className="h-11">
+                                    <SelectValue placeholder="Select blood group" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(group => (
+                                      <SelectItem key={group} value={group}>{group}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="student-address" className="text-gray-700 font-semibold">Address *</Label>
+                              <Textarea
+                                id="student-address"
+                                placeholder="Your full residential address"
+                                value={studentForm.address}
+                                onChange={(e) => setStudentForm({ ...studentForm, address: e.target.value })}
+                                className="min-h-24"
+                                required
+                              />
+                            </div>
+                            <Button 
+                              type="submit" 
+                              className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-base"
+                              disabled={loading}
+                            >
+                              {loading ? 'Creating Account...' : 'Create Student Account'}
+                            </Button>
+                          </form>
+                        </TabsContent>
+
+                        <TabsContent value="warden" className="mt-4">
+                          <form onSubmit={handleWardenSignup} className="space-y-5">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                              <div className="space-y-2">
+                                <Label htmlFor="warden-username" className="text-gray-700 font-semibold">Username *</Label>
+                                <Input
+                                  id="warden-username"
+                                  placeholder="Choose a username"
+                                  value={wardenForm.username}
+                                  onChange={(e) => setWardenForm({ ...wardenForm, username: e.target.value })}
+                                  className="h-11"
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="warden-fullname" className="text-gray-700 font-semibold">Full Name *</Label>
+                                <Input
+                                  id="warden-fullname"
+                                  placeholder="Your full name"
+                                  value={wardenForm.fullName}
+                                  onChange={(e) => setWardenForm({ ...wardenForm, fullName: e.target.value })}
+                                  className="h-11"
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="warden-email" className="text-gray-700 font-semibold">Email *</Label>
+                                <Input
+                                  id="warden-email"
+                                  type="email"
+                                  placeholder="your.email@college.edu"
+                                  value={wardenForm.email}
+                                  onChange={(e) => setWardenForm({ ...wardenForm, email: e.target.value })}
+                                  className="h-11"
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="warden-password" className="text-gray-700 font-semibold">Password *</Label>
+                                <Input
+                                  id="warden-password"
+                                  type="password"
+                                  placeholder="Create a strong password"
+                                  value={wardenForm.password}
+                                  onChange={(e) => setWardenForm({ ...wardenForm, password: e.target.value })}
+                                  className="h-11"
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-2 md:col-span-2">
+                                <Label htmlFor="warden-phone" className="text-gray-700 font-semibold">Phone</Label>
+                                <Input
+                                  id="warden-phone"
+                                  placeholder="Your phone number"
+                                  value={wardenForm.phone}
+                                  onChange={(e) => setWardenForm({ ...wardenForm, phone: e.target.value })}
+                                  className="h-11"
+                                />
+                              </div>
+                            </div>
+                            <Button 
+                              type="submit" 
+                              className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-base"
+                              disabled={loading}
+                            >
+                              {loading ? 'Creating Account...' : 'Create Warden Account'}
+                            </Button>
+                          </form>
+                        </TabsContent>
+                      </Tabs>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={loginForm.password}
-                      onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Signing in...' : 'Sign In'}
-                  </Button>
-                </form>
-              </TabsContent>
-
-              <TabsContent value="signup">
-                <div className="space-y-4">
-                  <div>
-                    <Label>Account Type</Label>
-                    <Tabs value={userRole} onValueChange={(value) => setUserRole(value as 'student' | 'warden')}>
-                      <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="student" className="flex items-center gap-2">
-                          <UserCheck className="w-4 h-4" />
-                          Student
-                        </TabsTrigger>
-                        <TabsTrigger value="warden" className="flex items-center gap-2">
-                          <Shield className="w-4 h-4" />
-                          Warden
-                        </TabsTrigger>
-                      </TabsList>
-
-                      <TabsContent value="student">
-                        <form onSubmit={handleStudentSignup} className="space-y-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="student-username">Username *</Label>
-                              <Input
-                                id="student-username"
-                                value={studentForm.username}
-                                onChange={(e) => setStudentForm({ ...studentForm, username: e.target.value })}
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="student-fullname">Full Name *</Label>
-                              <Input
-                                id="student-fullname"
-                                value={studentForm.fullName}
-                                onChange={(e) => setStudentForm({ ...studentForm, fullName: e.target.value })}
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="student-email">Email *</Label>
-                              <Input
-                                id="student-email"
-                                type="email"
-                                value={studentForm.email}
-                                onChange={(e) => setStudentForm({ ...studentForm, email: e.target.value })}
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="student-password">Password *</Label>
-                              <Input
-                                id="student-password"
-                                type="password"
-                                value={studentForm.password}
-                                onChange={(e) => setStudentForm({ ...studentForm, password: e.target.value })}
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="student-phone">Phone</Label>
-                              <Input
-                                id="student-phone"
-                                value={studentForm.phone}
-                                onChange={(e) => setStudentForm({ ...studentForm, phone: e.target.value })}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="student-roll">Roll Number *</Label>
-                              <Input
-                                id="student-roll"
-                                value={studentForm.rollNumber}
-                                onChange={(e) => setStudentForm({ ...studentForm, rollNumber: e.target.value })}
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="student-course">Course *</Label>
-                              <Input
-                                id="student-course"
-                                value={studentForm.course}
-                                onChange={(e) => setStudentForm({ ...studentForm, course: e.target.value })}
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="student-department">Department *</Label>
-                              <Input
-                                id="student-department"
-                                value={studentForm.department}
-                                onChange={(e) => setStudentForm({ ...studentForm, department: e.target.value })}
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="student-year">Year of Study *</Label>
-                              <Select
-                                value={studentForm.yearOfStudy.toString()}
-                                onValueChange={(value) => setStudentForm({ ...studentForm, yearOfStudy: parseInt(value) })}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="1">1st Year</SelectItem>
-                                  <SelectItem value="2">2nd Year</SelectItem>
-                                  <SelectItem value="3">3rd Year</SelectItem>
-                                  <SelectItem value="4">4th Year</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="student-semester">Semester *</Label>
-                              <Select
-                                value={studentForm.semester.toString()}
-                                onValueChange={(value) => setStudentForm({ ...studentForm, semester: parseInt(value) })}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
-                                    <SelectItem key={sem} value={sem.toString()}>{sem}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="student-hostel">Hostel Name *</Label>
-                              <Input
-                                id="student-hostel"
-                                value={studentForm.hostelName}
-                                onChange={(e) => setStudentForm({ ...studentForm, hostelName: e.target.value })}
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="student-room">Room Number *</Label>
-                              <Input
-                                id="student-room"
-                                value={studentForm.roomNumber}
-                                onChange={(e) => setStudentForm({ ...studentForm, roomNumber: e.target.value })}
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="student-guardian">Guardian Name *</Label>
-                              <Input
-                                id="student-guardian"
-                                value={studentForm.guardianName}
-                                onChange={(e) => setStudentForm({ ...studentForm, guardianName: e.target.value })}
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="student-guardian-phone">Guardian Phone *</Label>
-                              <Input
-                                id="student-guardian-phone"
-                                value={studentForm.guardianPhone}
-                                onChange={(e) => setStudentForm({ ...studentForm, guardianPhone: e.target.value })}
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="student-emergency">Emergency Contact *</Label>
-                              <Input
-                                id="student-emergency"
-                                value={studentForm.emergencyContact}
-                                onChange={(e) => setStudentForm({ ...studentForm, emergencyContact: e.target.value })}
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="student-blood">Blood Group</Label>
-                              <Select
-                                value={studentForm.bloodGroup}
-                                onValueChange={(value) => setStudentForm({ ...studentForm, bloodGroup: value })}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select blood group" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(group => (
-                                    <SelectItem key={group} value={group}>{group}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="student-address">Address *</Label>
-                            <Textarea
-                              id="student-address"
-                              value={studentForm.address}
-                              onChange={(e) => setStudentForm({ ...studentForm, address: e.target.value })}
-                              required
-                            />
-                          </div>
-                          <Button type="submit" className="w-full" disabled={loading}>
-                            {loading ? 'Creating Student Account...' : 'Create Student Account'}
-                          </Button>
-                        </form>
-                      </TabsContent>
-
-                      <TabsContent value="warden">
-                        <form onSubmit={handleWardenSignup} className="space-y-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="warden-username">Username *</Label>
-                              <Input
-                                id="warden-username"
-                                value={wardenForm.username}
-                                onChange={(e) => setWardenForm({ ...wardenForm, username: e.target.value })}
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="warden-fullname">Full Name *</Label>
-                              <Input
-                                id="warden-fullname"
-                                value={wardenForm.fullName}
-                                onChange={(e) => setWardenForm({ ...wardenForm, fullName: e.target.value })}
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="warden-email">Email *</Label>
-                              <Input
-                                id="warden-email"
-                                type="email"
-                                value={wardenForm.email}
-                                onChange={(e) => setWardenForm({ ...wardenForm, email: e.target.value })}
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="warden-password">Password *</Label>
-                              <Input
-                                id="warden-password"
-                                type="password"
-                                value={wardenForm.password}
-                                onChange={(e) => setWardenForm({ ...wardenForm, password: e.target.value })}
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="warden-phone">Phone</Label>
-                              <Input
-                                id="warden-phone"
-                                value={wardenForm.phone}
-                                onChange={(e) => setWardenForm({ ...wardenForm, phone: e.target.value })}
-                              />
-                            </div>
-                          </div>
-                          <Button type="submit" className="w-full" disabled={loading}>
-                            {loading ? 'Creating Warden Account...' : 'Create Warden Account'}
-                          </Button>
-                        </form>
-                      </TabsContent>
-                    </Tabs>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
 };
+
+export default Auth;
